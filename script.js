@@ -1,60 +1,45 @@
 'usestrict'
 console.log(document.title)
 
+// openDirBtn.addEventListener("click", async(e)=>{
+//     console.log("open dir picker")
+//     const handles = await getFile()
+//   // run code for dirHandle
+//     for (let handle of handles){
+//         console.log(handle)
+//         const file = await handle.getFile();
+//         const contents = await file.text();
 
+//         //console.log(contents)
+//         const parser = new DOMParser();
+//         let xmlDoc = parser.parseFromString(contents,"text/xml");
+//         // 
+//         let culture = xmlDoc.querySelector('[name="Culture"]')
+//         let value = culture.querySelector('value')
+//         // value = newLang
+//         value.textContent = newLang
+//         console.log(value.textContent)
+//         //
+//         const xmlSerializer = new XMLSerializer();
+//         const str = xmlSerializer.serializeToString(xmlDoc);
+//         console.log(str)
 
-const pickerOpts = {
-
-  };
-
-const newLang = 'abc'
-
-
-
-
-
-
-openDirBtn.addEventListener("click", async(e)=>{
-    console.log("open dir picker")
-    const handles = await getFile()
-  // run code for dirHandle
-    for (let handle of handles){
-        console.log(handle)
-        const file = await handle.getFile();
-        const contents = await file.text();
-
-        //console.log(contents)
-        const parser = new DOMParser();
-        let xmlDoc = parser.parseFromString(contents,"text/xml");
-        // 
-        let culture = xmlDoc.querySelector('[name="Culture"]')
-        let value = culture.querySelector('value')
-        // value = newLang
-        value.textContent = newLang
-        console.log(value.textContent)
-        //
-        const xmlSerializer = new XMLSerializer();
-        const str = xmlSerializer.serializeToString(xmlDoc);
-        console.log(str)
-
-        // Create a FileSystemWritableFileStream to write to.
-        const writable = await handle.createWritable();
-        // Write the contents of the file to the stream.
-        await writable.write(str);
-        // Close the file and write the contents to disk.
-        await writable.close();
-    }
-}
-)
+//         // Create a FileSystemWritableFileStream to write to.
+//         const writable = await handle.createWritable();
+//         // Write the contents of the file to the stream.
+//         await writable.write(str);
+//         // Close the file and write the contents to disk.
+//         await writable.close();
+//     }
+// }
+// )
 
 class LangChanger {
   constructor(params) {
     this.langs = params.langs
+    this.btnTarget = params.btnTargetId
     this.pickerOpts = params.pickerOpts
     this.openDirBtn = document.querySelector("#openDirPicker01")
-    // this.zhCNBtn = document.querySelector("#zhCNBtn")
-    // this.zhTWBtn = document.querySelector("#zhTWBtn")
-    // this.enGBBtn = document.querySelector("#enGBBtn")
     this.iniState = {
       isPickedFile:false,
       isSelectedLang:false,
@@ -63,9 +48,7 @@ class LangChanger {
   }
   // Handlers
   async getFile() {
-    // open file picker, destructure the one element returned array
     const fileHandles = await window.showOpenFilePicker(this.pickerOpts);
-    // run code with our fileHandle
     return fileHandles
   }
   async returnTxtContent(handles){
@@ -100,10 +83,38 @@ class LangChanger {
     await writable.write(str);
     await writable.close();
   }
-
+  // event-Listeners
+  listenFilePicker(fn){
+    this.openDirBtn.addEventListener('click', (e)=>{
+      fn()
+    })
+  }
+  listenLangChangers(fn, data){
+    data.forEach((el)=>{
+      const btn = document.querySelector(`#change_${el.value}`)
+      btn.addEventListener('click', (e)=>{
+        fn()
+      })
+    })
+  }
+  // Side-Effects
+  createChgBtns(target, data){
+    data.forEach((el)=>{
+      target.insertAdjacentHTML('beforeend',`
+      <button id = 'change_${el.value}' data-value = '${el.value}'>${el.name}</button>
+      `)
+    })
+  }
+  // init
+  init(){
+    const self = this
+    console.log(this.langs)
+    this.listenFilePicker(self.getFile.bind(self))
+    this.createChgBtns
+  }
 }
-
-const langChanger = new LangChanger({
+const langChangerParams = {
+  btnTargetId:btnTarget,
   langs: [
     { name: "English", value: "en-GB" },
     { name: "繁體中文", value: "zh-TW" },
@@ -121,4 +132,6 @@ const langChanger = new LangChanger({
     excludeAcceptAllOption: true,
     multiple: false,
   },
-});
+}
+const langChanger = new LangChanger(langChangerParams);
+langChanger.init()
