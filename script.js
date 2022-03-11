@@ -83,19 +83,26 @@ class LangChanger {
     await writable.write(str);
     await writable.close();
   }
+  // set states
+  setIsFileHandle(){}
+  setIsSetLang(){}
+
   // event-Listeners
   listenFilePicker(fn){
     this.openDirBtn.addEventListener('click', (e)=>{
       fn()
     })
   }
-  listenLangChangers(fn, data){
-    data.forEach((el)=>{
-      const btn = document.querySelector(`#change_${el.value}`)
+  listenLangChangers(fn, dataArr){
+    console.log(dataArr)
+    for (let data of dataArr){
+      const btn = document.querySelector(`#change_${data.value}`)
+      console.log(btn)
       btn.addEventListener('click', (e)=>{
-        fn()
+        console.log('click')
+        //fn()
       })
-    })
+    }
   }
   // Side-Effects
   createChgBtns(target, data){
@@ -106,11 +113,16 @@ class LangChanger {
     })
   }
   // init
-  init(){
+  async init(){
     const self = this
     console.log(this.langs)
+    // add file picker listener
     this.listenFilePicker(self.getFile.bind(self))
-    this.createChgBtns
+    // create buttons to change lang by params input
+    this.createChgBtns(this.btnTarget, this.langs)
+    // listen to change lang buttons
+    this.listenLangChangers(function(){console.log("click")}, this.langs)
+
   }
 }
 const langChangerParams = {
@@ -118,7 +130,7 @@ const langChangerParams = {
   langs: [
     { name: "English", value: "en-GB" },
     { name: "繁體中文", value: "zh-TW" },
-    { name: "簡體中文", value: "zh-TW" },
+    { name: "簡體中文", value: "zh-CN" },
   ],
   pickerOpts: {
     types: [
