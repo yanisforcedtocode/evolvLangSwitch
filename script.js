@@ -1,47 +1,16 @@
 'usestrict'
 console.log(document.title)
 
-// openDirBtn.addEventListener("click", async(e)=>{
-//     console.log("open dir picker")
-//     const handles = await getFile()
-//   // run code for dirHandle
-//     for (let handle of handles){
-//         console.log(handle)
-//         const file = await handle.getFile();
-//         const contents = await file.text();
-
-//         //console.log(contents)
-//         const parser = new DOMParser();
-//         let xmlDoc = parser.parseFromString(contents,"text/xml");
-//         // 
-//         let culture = xmlDoc.querySelector('[name="Culture"]')
-//         let value = culture.querySelector('value')
-//         // value = newLang
-//         value.textContent = newLang
-//         console.log(value.textContent)
-//         //
-//         const xmlSerializer = new XMLSerializer();
-//         const str = xmlSerializer.serializeToString(xmlDoc);
-//         console.log(str)
-
-//         // Create a FileSystemWritableFileStream to write to.
-//         const writable = await handle.createWritable();
-//         // Write the contents of the file to the stream.
-//         await writable.write(str);
-//         // Close the file and write the contents to disk.
-//         await writable.close();
-//     }
-// }
-// )
-
 class LangChanger {
   constructor(params) {
     this.langs = params.langs
     this.btnTarget = params.btnTargetId
     this.pickerOpts = params.pickerOpts
     this.openDirBtn = document.querySelector("#openDirPicker01")
+    this.completeMsg = document.querySelector("#completeMsg")
+    this.filePickerMsg = document.querySelector("#filePickerMsg")
     this.iniState = {
-      isPickedFile:false,
+      isReadFile:false,
       isSelectedLang:false,
       isSavedFile:false,
     }
@@ -54,10 +23,13 @@ class LangChanger {
   async returnTxtContent(handles){
     let contents = []
     for (let handle of handles){
-      console.log(handle)
       const file = await handle.getFile();
-      const contents = await file.text();
-      contents.push(contents)
+      const content = await file.text();
+      contents.push({
+        name: handle.name,
+        handle: handle,
+        content: content,
+      })
     }
     return contents[0]
   }
@@ -70,22 +42,50 @@ class LangChanger {
     let culture = xmlDoc.querySelector('[name="Culture"]')
     let value = culture.querySelector('value')
     value.textContent = newLang
-    console.log(value.textContent)
   }
   serializeXML(xmlDoc){
     const xmlSerializer = new XMLSerializer();
     const str = xmlSerializer.serializeToString(xmlDoc);
-    console.log(str)
     return str
   }
   async saveFile(str, handle){
-    const writable = await handle.createWritable();
-    await writable.write(str);
-    await writable.close();
+    try{
+      const writable = await handle.createWritable();
+      await writable.write(str);
+      await writable.close();
+      return "success"
+    }catch(err){
+      console.log(err)
+      return "fail"
+    }
   }
   // set states
-  setIsFileHandle(){}
-  setIsSetLang(){}
+  setIsReadFile(content){
+    if(content){
+      this.currentState.isReadFile = content
+      this.evoke(this.currentState)
+    }else{
+      this.currentState.isReadFile = "wrongFile"
+      this.evoke(this.currentState)
+    }
+  }
+  setIsSetLang(lang){
+    if(lang){
+      this.currentState.isSelectedLang = lang
+    } else {
+      this.currentState.isSelectedLang = false
+    }
+    this.evoke(this.currentState)
+  }
+  setIsSavedFile(result){
+    if(result === "success" && this.currentState.isSavedFile !== this.currentState.isSelectedLang){
+      this.currentState.isSavedFile = this.currentState.isSelectedLang
+      this.evoke(this.currentState)
+    } else {
+      this.currentState.isSavedFile = false
+      this.evoke(this.currentState)
+    }
+  }
 
   // event-Listeners
   listenFilePicker(fn){
@@ -94,13 +94,10 @@ class LangChanger {
     })
   }
   listenLangChangers(fn, dataArr){
-    console.log(dataArr)
     for (let data of dataArr){
       const btn = document.querySelector(`#change_${data.value}`)
-      console.log(btn)
       btn.addEventListener('click', (e)=>{
-        console.log('click')
-        //fn()
+        fn(e.target.dataset.value)
       })
     }
   }
@@ -112,17 +109,82 @@ class LangChanger {
       `)
     })
   }
+  showCompleteMsg(lang){
+    this.completeMsg.style.display = "block"
+    this.completeMsg.innerText = `Language is changed to ${lang}.`
+  }
+  showWarningMsg(msg){
+    this.completeMsg.style.display = "block"
+    this.completeMsg.innerText = msg
+  }
+  showFilePickerMsg(msg){
+    this.filePickerMsg.style.display = 'block'
+    this.filePickerMsg.innerText = msg
+  }
+  hideFilePickerMsg(){
+    this.filePickerMsg.style.display = 'none'
+  }
+  hideCompleteMsg(){
+    this.completeMsg.style.display = "none"
+  }
+  hideReadFileBtn(){
+    this.openDirBtn.style.display = "none"
+  }
+  // conditions
+  isEvolvConfig(content){
+    if(content.name === "EvolvRehab.exe.config"){
+      return content
+    } else {
+      return false
+    }
+  }
+  // evoke
+  evoke(currentState){
+    console.log(currentState)
+    if(currentState.isReadFile && currentState.isReadFile !== "wrongFile"){
+      this.hideReadFileBtn()
+      this.showFilePickerMsg('A correct .config file is loaded. Please proceed to choose the language.')
+    }
+    if(currentState.isReadFile && currentState.isReadFile === "wrongFile"){
+      this.showFilePickerMsg('A incorrect .config file is loaded. Please find the correct file and load again.')
+    }
+    if(currentState.isReadFile && currentState.isReadFile !== "wrongFile" && !currentState.isSelectedLang){
+      const self = this
+      this.createChgBtns(this.btnTarget, this.langs)
+      this.listenLangChangers(self.setIsSetLang.bind(self), this.langs)
+    }
+    if(currentState.isSelectedLang && this.currentState.isSavedFile !== this.currentState.isSelectedLang){
+      this.saveLangCompo(this.currentState.isSelectedLang, this.currentState.isReadFile)
+    }
+    if(currentState.isSavedFile && currentState.isReadFile !== "wrongFile"){
+      this.showCompleteMsg(this.currentState.isSavedFile)
+    }
+
+  }
+  // composition
+  async returnContentCompo(){
+    // getFile
+    const handles = await this.getFile()
+    const content = await this.returnTxtContent(handles)
+    // returnTxtContent if handle.name = fileName || false
+    this.setIsReadFile(this.isEvolvConfig(content))
+  }
+  
+  async saveLangCompo(lang, content){
+    const xmlDoc = this.returnXMLDoc(content.content)
+    this.changeLangValue(xmlDoc, lang)
+    const result = await this.saveFile(this.serializeXML(xmlDoc), content.handle)
+    this.setIsSavedFile(result)
+  }
+
   // init
   async init(){
     const self = this
-    console.log(this.langs)
+    // mount current states
+    this.currentState = this.iniState
+    this.evoke(this.currentState)
     // add file picker listener
-    this.listenFilePicker(self.getFile.bind(self))
-    // create buttons to change lang by params input
-    this.createChgBtns(this.btnTarget, this.langs)
-    // listen to change lang buttons
-    this.listenLangChangers(function(){console.log("click")}, this.langs)
-
+    this.listenFilePicker(self.returnContentCompo.bind(self))
   }
 }
 const langChangerParams = {
