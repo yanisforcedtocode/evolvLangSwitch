@@ -143,10 +143,10 @@ class LangChanger {
     console.log(currentState)
     if(currentState.isReadFile && currentState.isReadFile !== "wrongFile"){
       this.hideReadFileBtn()
-      this.showFilePickerMsg('A correct .config file is loaded. Please proceed to choose the language.')
+      this.showFilePickerMsg('Config file is successfully loaded. Please proceed to choose the language.')
     }
     if(currentState.isReadFile && currentState.isReadFile === "wrongFile"){
-      this.showFilePickerMsg('A incorrect .config file is loaded. Please find the correct file and load again.')
+      this.showFilePickerMsg('An incorrect .config file is loaded! Please find the correct file and load again.')
     }
     if(currentState.isReadFile && currentState.isReadFile !== "wrongFile" && !currentState.isSelectedLang){
       const self = this

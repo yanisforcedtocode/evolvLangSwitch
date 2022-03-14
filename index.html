@@ -10,7 +10,7 @@
         <title>Evolv Language Switcher</title>
         <meta name="description" content="Switches EvolvRehab Language using FS Access API.">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="">
+        <link rel="stylesheet" href="./style.css">
     </head>
     <body>
         <!--[if lt IE 7]>
@@ -20,12 +20,24 @@
         <script src="" async defer></script>
     </body>
     <h3>EvolvRehab Language Switcher</h3>
-    <p>How to use:</p>
-    <p>Step 1: Open the .config file at the directory of the Evolv application.</p>
-    <button id = "openDirPicker01">Open dirPicker</button>
-    <p id = "filePickerMsg" style = "display:none"></p>
-    <p>Step 2: When the .config file is loaded, buttons for available languages will appear. Choose the Language you want.</p>
+    <button id = "openDirPicker01">Select the Config File</button>
+    <p class = "msg" id = "filePickerMsg" style = "display:none"></p>
     <div id = "btnTarget"></div>
-    <p id = "completeMsg" style = "display:none">Congrats! Langauge is switched.</p>
+    <p class = "msg" id = "completeMsg" style = "display:none">Congrats! Langauge is switched.</p>
+    <div class="how2use">
+    <p>How to use:</p>
+    <ul>
+        <li>Step 1: Open the .config file at the directory of the Evolv application. (File name: EvolvRehab.exe.config)</li>
+        <img src="./asset/img/filePicker.png" alt="" >
+        <img style = "display:none" src="./asset/img/pickFile.png" alt="" >
+        <li>Step 2: When the .config file is loaded, buttons for available languages will appear. Choose the Language you want.</li>
+        <img src="./asset/img/langPicker.png" alt="">
+        <li>Allow this application to save changes on the .config file.</li>
+        <img src="./asset/img/saveChanges.png" alt="">
+        <li>Done!</li>
+    </ul>
+    </div>
+    <p></p>
+    <p></p>
     <script src = "script.js"></script>
 </html>
